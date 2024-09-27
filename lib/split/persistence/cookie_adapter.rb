@@ -36,7 +36,12 @@ module Split
             # The "send" is necessary when we call ab_test from the controller
             # and thus @context is a rails controller, because then "cookies" is
             # a private method.
-            @context.send(:cookies)[cookie_key] = cookie_value
+
+            begin # incognito mode inside ViewComponent raises NoMethodError. Allowing fallback
+              @context.send(:cookies)[cookie_key] = cookie_value
+            rescue NoMethodError
+              set_cookie_via_rack(cookie_key, cookie_value)
+            end
           else
             set_cookie_via_rack(cookie_key, cookie_value)
           end
